@@ -1,0 +1,19 @@
+services:
+
+  app.age.age_calculation_manager:
+    class: App\AgeCalculation\AgeCalculationManager
+    arguments:
+      $ageCalculator: '@app.age.age_calculator'
+      $adultChecker: '@app.age.adult_checker'
+
+  app.age.age_calculator:
+    class: App\AgeCalculation\AgeCalculator
+
+  app.age.adult_checker:
+    class: App\AgeCalculation\AdultChecker
+
+  App\Command\MyAgeCommand:
+    class: App\Command\MyAgeCommand
+    tags: ['console.command']
+    arguments:
+      $ageCalculationManager: '@app.age.age_calculation_manager'

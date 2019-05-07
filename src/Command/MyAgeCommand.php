@@ -3,8 +3,7 @@
 
 namespace App\Command;
 
-use DateInterval;
-use DateTime;
+use App\AgeCalculation\AgeCalculationManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,6 +15,15 @@ class MyAgeCommand extends Command
 {
     protected static $defaultName = 'app:age:calculator';
 
+    private $ageCalculationManager;
+
+    public function __construct(AgeCalculationManager $ageCalculationManager)
+    {
+        $this->ageCalculationManager = $ageCalculationManager;
+
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -26,28 +34,20 @@ class MyAgeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-        if (empty($input->getArgument('birthDate')) ||
-            !preg_match('/[0-9]{4}-[0-9]{2}-[0-9]{2}/', $input->getArgument('birthDate'))
-        ) {
-            $io->error('No correct date of birth was provided. Run command with --help to set correct parameters.');
-        } else {
-            $age = $this->calculateAge($input->getArgument('birthDate'));
-            $io->note('I am ' . $age->y . ' years old');
+        $birthDate = $input->getArgument('birthDate');
+        $adultOption = $input->getOption('adult');
 
-            if ($input->getOption('adult')) {
-                if ($age->y < 18) {
-                    $io->warning('Am I an adult ?   ----  NO !!!');
-                } else {
-                    $io->success('Am I an adult ?   ----  YES !!!');
-                }
+        $age = $this->ageCalculationManager->calculateAge($birthDate);
+
+        $io = new SymfonyStyle($input, $output);
+        $io->note("I am $age years old");
+
+        if ($adultOption) {
+            if( $this->ageCalculationManager->adultCheck($age) ) {
+                $io->success('Am I an adult ?   ----  YES !!!');
+            } else {
+                $io->warning('Am I an adult ?   ----  NO !!!');
             }
         }
-    }
-
-    private function calculateAge(string $age): DateInterval
-    {
-        $birthDate = new DateTime($age);
-        return $birthDate->diff(new DateTime());
     }
 }
